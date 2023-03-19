@@ -1,12 +1,25 @@
+import { Pacman } from "./pacman.js";
 import { GameStructure } from "./gameStructure.js";
 
 const canvas = document.getElementById("canvas");
 export const canvasContext = canvas.getContext("2d");
 
-const animationsFrames = document.getElementById("animations");
+export const animationsFrames = document.getElementById("animations");
 const ghostFrames = document.getElementById("ghost");
 
 const gameStructure = new GameStructure();
+
+let pacman;
+
+const createNewPacman = () => {
+	pacman = new Pacman(
+		gameStructure.oneBlockSize,
+		gameStructure.oneBlockSize,
+		gameStructure.oneBlockSize,
+		gameStructure.oneBlockSize,
+		gameStructure.oneBlockSize / 5
+	);
+};
 
 let gameLoop = () => {
 	update();
@@ -14,13 +27,14 @@ let gameLoop = () => {
 };
 
 let update = () => {
-	// Do something
+	pacman.moveProcess();
 };
 
 let draw = () => {
-	// Do something
 	gameStructure.createWall(0, 0, canvas.width, canvas.height, "black");
 	drawWalls();
+
+	pacman.draw();
 };
 
 let gameInterval = setInterval(gameLoop, 1000 / gameStructure.fps);
@@ -62,16 +76,8 @@ const drawWalls = () => {
 		endRow--;
 	}
 
-	clearInterval(gameInterval);
+	// clearInterval(gameInterval);
 };
 
-// createWall(0, 0, 200, 200, "red");
-// createWall(10, 10, 200 - 10, 200 - 20, "black");
-
-// createWall(
-// 	50,
-// 	50,
-// 	GameVariable.wallSpaceWidth + GameVariable.wallOffset,
-// 	GameVariable.wallSpaceWidth,
-// 	GameVariable.wallInnerColor
-// );
+createNewPacman();
+gameLoop();

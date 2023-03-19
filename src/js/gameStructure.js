@@ -6,7 +6,7 @@ class GameStructure {
 	wallSpaceWidth = this.oneBlockSize / 1.6;
 	wallOffset = (this.oneBlockSize - this.wallSpaceWidth) / 2;
 	wallInnerColor = "black";
-	wallColor = "#342dca";
+	wallColor = "#d03e19";
 	static DIRECTION_RIGHT = 4;
 	static DIRECTION_UP = 3;
 	static DIRECTION_LEFT = 2;

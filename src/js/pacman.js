@@ -1,4 +1,4 @@
-import { animationsFrames, canvasContext } from "./game.js";
+import { animationsFrames, canvasContext, gameStructure } from "./game.js";
 import { GameStructure } from "./gameStructure.js";
 
 class Pacman {
@@ -9,14 +9,22 @@ class Pacman {
 		this.height = height;
 		this.speed = speed;
 		this.direction = GameStructure.DIRECTION_RIGHT;
+		this.nextdirection = this.direction;
 		this.currentFrame = 1;
 		this.frameCount = 7;
-
-		this.gameStructure = new GameStructure();
+		this.foodToReplace = [];
 
 		setInterval(() => {
 			this.changeAnimation();
 		}, 100);
+
+		setInterval(() => {
+			if (this.foodToReplace.length > 20) {
+				let [row, col] = this.foodToReplace.shift();
+				gameStructure.map[row][col] = 2;
+				gameStructure.drawFoods(row, col);
+			}
+		}, 500);
 	}
 
 	moveProcess() {
@@ -28,7 +36,21 @@ class Pacman {
 		}
 	}
 
-	eat() {}
+	eat() {
+		for (var row = 0; row < gameStructure.map.length; row++) {
+			for (var col = 0; col < gameStructure.map[row].length; col++) {
+				if (
+					gameStructure.map[row][col] == 2 &&
+					this.getMapX() == col &&
+					this.getMapY() == row
+				) {
+					gameStructure.map[row][col] = 3;
+					this.foodToReplace.push([row, col]);
+					gameStructure.score++;
+				}
+			}
+		}
+	}
 
 	moveBackwards() {
 		switch (this.direction) {
@@ -73,18 +95,18 @@ class Pacman {
 	checkCollision() {
 		let isCollided = false;
 		if (
-			this.gameStructure.map[
-				parseInt(this.y / this.gameStructure.oneBlockSize)
-			][parseInt(this.x / this.gameStructure.oneBlockSize)] == 1 ||
-			this.gameStructure.map[
-				parseInt(this.y / this.gameStructure.oneBlockSize + 0.9999)
-			][parseInt(this.x / this.gameStructure.oneBlockSize)] == 1 ||
-			this.gameStructure.map[
-				parseInt(this.y / this.gameStructure.oneBlockSize)
-			][parseInt(this.x / this.gameStructure.oneBlockSize + 0.9999)] == 1 ||
-			this.gameStructure.map[
-				parseInt(this.y / this.gameStructure.oneBlockSize + 0.9999)
-			][parseInt(this.x / this.gameStructure.oneBlockSize + 0.9999)] == 1
+			gameStructure.map[parseInt(this.y / gameStructure.oneBlockSize)][
+				parseInt(this.x / gameStructure.oneBlockSize)
+			] == 1 ||
+			gameStructure.map[parseInt(this.y / gameStructure.oneBlockSize + 0.9999)][
+				parseInt(this.x / gameStructure.oneBlockSize)
+			] == 1 ||
+			gameStructure.map[parseInt(this.y / gameStructure.oneBlockSize)][
+				parseInt(this.x / gameStructure.oneBlockSize + 0.9999)
+			] == 1 ||
+			gameStructure.map[parseInt(this.y / gameStructure.oneBlockSize + 0.9999)][
+				parseInt(this.x / gameStructure.oneBlockSize + 0.9999)
+			] == 1
 		) {
 			isCollided = true;
 		}
@@ -93,7 +115,20 @@ class Pacman {
 
 	checkGhostCollision() {}
 
-	changeDirectionIfPossible() {}
+	changeDirectionIfPossible() {
+		if (this.nextdirection == this.direction) return;
+
+		let currDirection = this.direction;
+		this.direction = this.nextdirection;
+
+		this.moveForwards();
+		if (this.checkCollision()) {
+			this.moveBackwards();
+			this.direction = currDirection;
+		} else {
+			this.moveBackwards();
+		}
+	}
 
 	changeAnimation() {
 		this.currentFrame =
@@ -103,23 +138,23 @@ class Pacman {
 	draw() {
 		canvasContext.save();
 		canvasContext.translate(
-			this.x + this.gameStructure.oneBlockSize / 2,
-			this.y + this.gameStructure.oneBlockSize / 2
+			this.x + gameStructure.oneBlockSize / 2,
+			this.y + gameStructure.oneBlockSize / 2
 		);
 
 		canvasContext.rotate((this.direction * 90 * Math.PI) / 180);
 
 		canvasContext.translate(
-			-this.x - this.gameStructure.oneBlockSize / 2,
-			-this.y - this.gameStructure.oneBlockSize / 2
+			-this.x - gameStructure.oneBlockSize / 2,
+			-this.y - gameStructure.oneBlockSize / 2
 		);
 
 		canvasContext.drawImage(
 			animationsFrames,
-			(this.currentFrame - 1) / this.gameStructure.oneBlockSize,
+			(this.currentFrame - 1) / gameStructure.oneBlockSize,
 			0,
-			this.gameStructure.oneBlockSize,
-			this.gameStructure.oneBlockSize,
+			gameStructure.oneBlockSize,
+			gameStructure.oneBlockSize,
 			this.x,
 			this.y,
 			this.width,
@@ -130,28 +165,26 @@ class Pacman {
 	}
 
 	getMapX() {
-		let mapX = parseInt(this.x / this.gameStructure.oneBlockSize);
+		let mapX = parseInt(this.x / gameStructure.oneBlockSize);
 		return mapX;
 	}
 
 	getMapY() {
-		let mapY = parseInt(this.y / this.gameStructure.oneBlockSize);
+		let mapY = parseInt(this.y / gameStructure.oneBlockSize);
 
 		return mapY;
 	}
 
 	getMapXRightSide() {
 		let mapX = parseInt(
-			(this.x * 0.99 + this.gameStructure.oneBlockSize) /
-				this.gameStructure.oneBlockSize
+			(this.x * 0.99 + gameStructure.oneBlockSize) / gameStructure.oneBlockSize
 		);
 		return mapX;
 	}
 
 	getMapYRightSide() {
 		let mapY = parseInt(
-			(this.y * 0.99 + this.gameStructure.oneBlockSize) /
-				this.gameStructure.oneBlockSize
+			(this.y * 0.99 + gameStructure.oneBlockSize) / gameStructure.oneBlockSize
 		);
 		return mapY;
 	}

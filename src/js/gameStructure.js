@@ -7,6 +7,8 @@ class GameStructure {
 	wallOffset = (this.oneBlockSize - this.wallSpaceWidth) / 2;
 	wallInnerColor = "black";
 	wallColor = "#d03e19";
+	foodColor = "#FEB897";
+	score = 0;
 	static DIRECTION_RIGHT = 4;
 	static DIRECTION_UP = 3;
 	static DIRECTION_LEFT = 2;
@@ -38,6 +40,16 @@ class GameStructure {
 		[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 	];
 
+	drawScore() {
+		canvasContext.font = "20px Emulogic";
+		canvasContext.fillStyle = "white";
+		canvasContext.fillText(
+			`Score: ${this.score}`,
+			0,
+			this.oneBlockSize * (this.map.length + 1)
+		);
+	}
+
 	drawWall(row, col) {
 		if (this.map[row][col] == 1)
 			this.createWall(
@@ -46,6 +58,17 @@ class GameStructure {
 				this.oneBlockSize,
 				this.oneBlockSize,
 				this.wallColor
+			);
+	}
+
+	drawFoods(row, col) {
+		if (this.map[row][col] == 2)
+			this.createWall(
+				col * this.oneBlockSize + this.oneBlockSize / 3,
+				row * this.oneBlockSize + this.oneBlockSize / 3,
+				this.oneBlockSize / 3,
+				this.oneBlockSize / 3,
+				this.foodColor
 			);
 	}
 

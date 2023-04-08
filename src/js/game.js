@@ -1,17 +1,28 @@
 import { Pacman } from "./pacman.js";
 import { GameStructure } from "./gameStructure.js";
+import { Ghost } from "./ghost.js";
 
 const canvas = document.getElementById("canvas");
 export const canvasContext = canvas.getContext("2d");
 
 export const animationsFrames = document.getElementById("animations");
-const ghostFrames = document.getElementById("ghost");
+export const ghostFrames = document.getElementById("ghost");
 
 export const gameStructure = new GameStructure();
 
-let pacman;
+export let pacman;
+let ghosts = [];
+let foodCount = 220;
 
-const createNewPacman = () => {
+let ghostLocations = [
+	{ x: 0, y: 0 },
+	{ x: 176, y: 0 },
+	{ x: 0, y: 121 },
+	{ x: 176, y: 121 },
+];
+let lives = 3;
+
+let createNewPacman = () => {
 	pacman = new Pacman(
 		gameStructure.oneBlockSize,
 		gameStructure.oneBlockSize,
@@ -21,14 +32,113 @@ const createNewPacman = () => {
 	);
 };
 
+let createGhosts = () => {
+	ghosts = [];
+	for (let i = 0; i < gameStructure.ghostCount; i++) {
+		let newGhost = new Ghost(
+			9 * gameStructure.oneBlockSize +
+				(i % 2 == 0 ? 0 : 1) * gameStructure.oneBlockSize,
+			10 * gameStructure.oneBlockSize +
+				(i % 2 == 0 ? 0 : 1) * gameStructure.oneBlockSize,
+			gameStructure.oneBlockSize,
+			gameStructure.oneBlockSize,
+			pacman.speed / 2,
+			ghostLocations[i % 4].x,
+			ghostLocations[i % 4].y,
+			124,
+			116,
+			6 + i
+		);
+		ghosts.push(newGhost);
+	}
+};
+
+let drawRemainingLives = () => {
+	canvasContext.font = "20px Emulogic";
+	canvasContext.fillStyle = "white";
+	canvasContext.fillText(
+		"Lives: ",
+		220,
+		gameStructure.oneBlockSize * (gameStructure.map.length + 1)
+	);
+
+	for (let i = 0; i < lives; i++) {
+		canvasContext.drawImage(
+			animationsFrames,
+			2 * gameStructure.oneBlockSize,
+			0,
+			gameStructure.oneBlockSize,
+			gameStructure.oneBlockSize,
+			350 + i * gameStructure.oneBlockSize,
+			gameStructure.oneBlockSize * gameStructure.map.length + 2,
+			gameStructure.oneBlockSize,
+			gameStructure.oneBlockSize
+		);
+	}
+};
+
 let gameLoop = () => {
-	update();
 	draw();
+	update();
+	for (let i = 0; i < ghosts.length; i++) {
+		ghosts[i].moveProcess();
+	}
+};
+
+let restartPacmanAndGhosts = () => {
+	createNewPacman();
+	createGhosts();
+};
+
+let onGhostCollision = () => {
+	lives--;
+	restartPacmanAndGhosts();
+	if (lives == 0) {
+		gameOver();
+	}
+};
+
+let gameOver = () => {
+	drawGameOver();
+	clearInterval(gameInterval);
+};
+
+let drawGameOver = () => {
+	canvasContext.font = "20px emulogic";
+	canvasContext.fillStyle = "white";
+	canvasContext.fillText("Game Over!", 150, 200);
+};
+
+let drawWin = () => {
+	canvasContext.font = "20px emulogic";
+	canvasContext.fillStyle = "white";
+	canvasContext.fillText("You Won!", 150, 200);
 };
 
 let update = () => {
 	pacman.moveProcess();
 	pacman.eat();
+	updateGhosts();
+	if (pacman.checkGhostCollision(ghosts)) {
+		onGhostCollision();
+	}
+
+	if (gameStructure.score >= foodCount) {
+		drawWin();
+		clearInterval(gameInterval);
+	}
+};
+
+let updateGhosts = () => {
+	for (let i = 0; i < ghosts.length; i++) {
+		ghosts[i].moveProcess();
+	}
+};
+
+let drawGhosts = () => {
+	for (let i = 0; i < ghosts.length; i++) {
+		ghosts[i].draw();
+	}
 };
 
 let draw = () => {
@@ -37,6 +147,8 @@ let draw = () => {
 
 	pacman.draw();
 	gameStructure.drawScore();
+	drawGhosts();
+	drawRemainingLives();
 };
 
 let gameInterval = setInterval(gameLoop, 1000 / gameStructure.fps);
@@ -89,6 +201,7 @@ const drawLayout = () => {
 
 createNewPacman();
 gameLoop();
+createGhosts();
 
 window.addEventListener("keydown", (event) => {
 	let currKey = event.key;
